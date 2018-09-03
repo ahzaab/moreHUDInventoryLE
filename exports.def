@@ -1,0 +1,4 @@
+LIBRARY	"AHZmoreHUDInventoryLE"
+EXPORTS
+SKSEPlugin_Query
+SKSEPlugin_Load
