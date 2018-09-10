@@ -15,6 +15,7 @@ public:
    ~CAHZScaleform();
    void ExtendItemCard(GFxMovieView * view, GFxValue * object, InventoryEntryData * item);
    void Initialize();
+   bool CAHZScaleform::GetWasBookRead(TESForm *form);
    bool m_showBookRead;
    bool m_enableItemCardResize;
 
@@ -28,7 +29,6 @@ private:
    static double mRound(double d);
    string GetBookSkill(TESForm *form);
    bool GetIsKnownEnchantment(InventoryEntryData * item);
-   bool CAHZScaleform::GetWasBookRead(TESForm *form);
 
    bool m_showBookSkill;
    bool m_showKnownEnchantment;
