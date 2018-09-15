@@ -15,9 +15,9 @@ public:
    ~CAHZScaleform();
    void ExtendItemCard(GFxMovieView * view, GFxValue * object, InventoryEntryData * item);
    void Initialize();
-   bool CAHZScaleform::GetWasBookRead(TESForm *form);
    bool m_showBookRead;
    bool m_enableItemCardResize;
+   bool CAHZScaleform::GetWasBookRead(TESForm *form);
 
 private:
    static void ReplaceStringInPlace(std::string& subject, const std::string& search,
@@ -32,4 +32,5 @@ private:
 
    bool m_showBookSkill;
    bool m_showKnownEnchantment;
+   bool m_showPosNegEffects;
 };

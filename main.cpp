@@ -10,7 +10,7 @@
 
 using namespace std;
 
-#define PLUGIN_VERSION  (10002)
+#define PLUGIN_VERSION  (10003)
 #define PLUGIN_NAME  ("AHZmoreHUDInventoryLE")
 
 IDebugLog	gLog;
@@ -51,7 +51,7 @@ public:
    virtual void	Invoke(Args * args)
    {
       args->result->SetBool(m_ahzScaleForm.m_showBookRead);
-   }
+   } 
 };
 
 
