@@ -3,7 +3,7 @@
 bool m_showBookRead;
 bool m_showBookSkill;
 bool m_showKnownEnchantment;
-
+bool m_showPosNegEffects;
 
 double CAHZScaleform::mRound(double r)
 {
@@ -48,6 +48,61 @@ void CAHZScaleform::ExtendItemCard(GFxMovieView * view, GFxValue * object, Inven
       // Add the object to the scaleform function
       object->SetMember("AHZItemCardObj", &obj);
    }
+   else if (item->type->GetFormType() == kFormType_Potion)
+   {
+	   if (m_showPosNegEffects)
+	   {
+		   AlchemyItem *alchItem = DYNAMIC_CAST(item->type, TESForm, AlchemyItem);
+		   // Check the extra data for enchantments learned by the player
+		   if (item->extendDataList && alchItem)
+		   {
+			   for (ExtendDataList::Iterator it = item->extendDataList->Begin(); !it.End(); ++it)
+			   {
+				   BaseExtraList * pExtraDataList = it.Get();
+
+				   // Search extra data for player created poisons
+				   if (pExtraDataList)
+				   {
+					   if (pExtraDataList->HasType(kExtraData_Poison))
+					   {
+						   if (ExtraPoison* extraPoison = static_cast<ExtraPoison*>(pExtraDataList->GetByType(kExtraData_Poison)))
+						   {
+							   alchItem = extraPoison->poison;
+						   }
+					   }
+				   }
+			   }
+		   }
+
+		   if (alchItem && alchItem->effectItemList.count)
+		   {
+			   UInt32 effectCount = alchItem->effectItemList.count;
+			   UInt32 negEffects = 0;
+			   UInt32 posEffects = 0;
+
+			   for (int i = 0; i < effectCount; i++)
+			   {
+				   if (alchItem->effectItemList[i]->mgef)
+				   {
+					   if (((alchItem->effectItemList[i]->mgef->properties.flags & EffectSetting::Properties::kEffectType_Detrimental) == EffectSetting::Properties::kEffectType_Detrimental) || 
+						   ((alchItem->effectItemList[i]->mgef->properties.flags & EffectSetting::Properties::kEffectType_Hostile) == EffectSetting::Properties::kEffectType_Hostile))
+					   {
+						   negEffects++; 
+					   }
+					   else
+					   {
+						   posEffects++;
+					   }
+				   }
+			   }
+
+			   RegisterNumber(&obj, "PosEffects", posEffects);
+			   RegisterNumber(&obj, "NegEffects", negEffects);
+		   }
+	   }
+	   // Add the object to the scaleform function
+	   object->SetMember("AHZItemCardObj", &obj);
+   }
 }
 
 void CAHZScaleform::Initialize()
@@ -56,6 +111,7 @@ void CAHZScaleform::Initialize()
    m_showBookSkill = g_ahzConfiguration.GetBooleanValue("General", "bShowBookSkill", true);
    m_showKnownEnchantment = g_ahzConfiguration.GetBooleanValue("General", "bShowKnownEnchantment", true);
    m_enableItemCardResize = g_ahzConfiguration.GetBooleanValue("General", "bEnableItemCardResize", true); 
+   m_showPosNegEffects = g_ahzConfiguration.GetBooleanValue("General", "bShowPosNegEffects", true); 
 }
 
 bool CAHZScaleform::GetWasBookRead(TESForm *form)

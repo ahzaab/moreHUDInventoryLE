@@ -10,7 +10,7 @@
 
 using namespace std;
 
-#define PLUGIN_VERSION  (10001)
+#define PLUGIN_VERSION  (10003)
 #define PLUGIN_NAME  ("AHZmoreHUDInventoryLE")
 
 IDebugLog	gLog;
@@ -51,7 +51,7 @@ public:
    virtual void	Invoke(Args * args)
    {
       args->result->SetBool(m_ahzScaleForm.m_showBookRead);
-   }
+   } 
 };
 
 
@@ -62,6 +62,21 @@ public:
    {
       args->result->SetBool(m_ahzScaleForm.m_enableItemCardResize);
    }
+};
+
+class SKSEScaleform_GetWasBookRead : public GFxFunctionHandler
+{
+public:
+	virtual void	Invoke(Args * args)
+	{
+		if (args && args->args && args->numArgs > 0 && args->args[0].GetType() == GFxValue::kType_Number)
+		{
+			UInt32 formID = (UInt32)args->args[0].GetNumber();
+
+			TESForm* bookForm = LookupFormByID(formID);
+			args->result->SetBool(m_ahzScaleForm.GetWasBookRead(bookForm));
+		}
+	}
 };
 
 class SKSEScaleform_AHZLog : public GFxFunctionHandler
@@ -88,7 +103,8 @@ bool RegisterScaleform(GFxMovieView * view, GFxValue * root)
    RegisterFunction <SKSEScaleform_AHZLog>(root, view, "AHZLog");
    RegisterFunction <SKSEScaleform_GetCurrentMenu>(root, view, "GetCurrentMenu");
    RegisterFunction <SKSEScaleform_EnableItemCardResize>(root, view, "EnableItemCardResize");
-   
+   RegisterFunction <SKSEScaleform_GetWasBookRead>(root, view, "GetWasBookRead");
+
    MenuManager::GetSingleton()->MenuOpenCloseEventDispatcher()->AddEventSink(&menuEvent);
    return true;
 }
