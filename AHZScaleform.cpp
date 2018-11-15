@@ -1,4 +1,5 @@
 ﻿#include "AHZScaleform.h"
+#include "skse\HashUtil.h"
 
 bool m_showBookRead;
 bool m_showBookSkill;
@@ -102,7 +103,17 @@ void CAHZScaleform::ExtendItemCard(GFxMovieView * view, GFxValue * object, Inven
 	   }
 	   // Add the object to the scaleform function
 	   object->SetMember("AHZItemCardObj", &obj);
-   }
+	}
+
+	// Static icons
+	const char* name = CALL_MEMBER_FN(item, GenerateName)();
+	SInt32 itemId = (SInt32)HashUtil::CRC32(name, item->type->formID & 0x00FFFFFF);
+	string iconName = papyrusMoreHudIE::GetIconName(itemId);
+
+	if (iconName.length())
+	{
+		RegisterString(object, "AHZItemIcon", iconName.c_str());
+	}
 }
 
 void CAHZScaleform::Initialize()
