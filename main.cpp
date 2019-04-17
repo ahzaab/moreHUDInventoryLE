@@ -7,10 +7,11 @@
 #include "skse/ScaleformCallbacks.h"          // for GFxFunctionHandler
 #include <stddef.h>                             // for NULL
 #include "AHZConfiguration.h"
+#include "AHZPapyrusMoreHudIE.h"
+#include "skse\HashUtil.h"
 
 using namespace std;
 
-#define PLUGIN_VERSION  (10003)
 #define PLUGIN_NAME  ("AHZmoreHUDInventoryLE")
 
 IDebugLog	gLog;
@@ -20,8 +21,9 @@ CAHZScaleform m_ahzScaleForm;
 static UInt32 g_skseVersion = 0;
 SKSEScaleformInterface		* g_scaleform = NULL;
 SKSEMessagingInterface *g_skseMessaging = NULL;
+SKSEPapyrusInterface *g_sksePapyrus = NULL;
 AHZEventHandler menuEvent;
-
+static string s_lastIconName; 
 
 // Just initialize to start routing to the console window
 CAHZDebugConsole theDebugConsole;
@@ -79,6 +81,37 @@ public:
 	}
 };
 
+class SKSEScaleform_GetIconForItemId : public GFxFunctionHandler
+{
+public:
+	virtual void	Invoke(Args * args) 
+	{
+		if (args && args->args && args->numArgs > 1 && args->args[0].GetType() == GFxValue::kType_Number && args->args[1].GetType() == GFxValue::kType_String)
+		{
+			UInt32 formID = (UInt32)args->args[0].GetNumber();
+			
+			const char * name = args->args[1].GetString();
+			
+			if (!name)
+			{
+				return;
+			}
+
+			SInt32 itemId = (SInt32)HashUtil::CRC32(name, formID & 0x00FFFFFF);
+			s_lastIconName.clear();
+			s_lastIconName.append(papyrusMoreHudIE::GetIconName(itemId));
+			GFxValue obj;
+			args->movie->CreateObject(&obj);
+			GFxValue	fxValue;
+			fxValue.SetString(s_lastIconName.c_str());
+			obj.SetMember("iconName", &fxValue);
+
+			// Add the object to the scaleform function
+			args->args[2].SetMember("returnObject", &obj);
+		}
+	}
+};
+
 class SKSEScaleform_AHZLog : public GFxFunctionHandler
 {
 public:
@@ -104,6 +137,9 @@ bool RegisterScaleform(GFxMovieView * view, GFxValue * root)
    RegisterFunction <SKSEScaleform_GetCurrentMenu>(root, view, "GetCurrentMenu");
    RegisterFunction <SKSEScaleform_EnableItemCardResize>(root, view, "EnableItemCardResize");
    RegisterFunction <SKSEScaleform_GetWasBookRead>(root, view, "GetWasBookRead");
+   RegisterFunction <SKSEScaleform_GetIconForItemId>(root, view, "GetIconForItemId");
+
+
 
    MenuManager::GetSingleton()->MenuOpenCloseEventDispatcher()->AddEventSink(&menuEvent);
    return true;
@@ -186,6 +222,12 @@ extern "C"
          return false;
       }
 
+	  g_sksePapyrus = (SKSEPapyrusInterface *)skse->QueryInterface(kInterface_Papyrus);
+	  if (!g_skseMessaging)
+	  {
+		  _ERROR("couldn't get Papyrus interface");
+		  return false;
+	  }
 
       // supported runtime version
       return true;
@@ -215,6 +257,9 @@ extern "C"
 
       // Register listener for the gme loaded event
       g_skseMessaging->RegisterListener(skse->GetPluginHandle(), "SKSE", EventListener);
+
+	  // Register Papyrus functions
+	  g_sksePapyrus->Register(papyrusMoreHudIE::RegisterFuncs);
 
       _MESSAGE("%s -v%d Loaded", PLUGIN_NAME, PLUGIN_VERSION);
       return true;
